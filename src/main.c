@@ -27,6 +27,8 @@ node_t* allocate_node(void* base_addr, uint64_t size) {
 
     node_t* node = (node_t*) base_addr;
 
+    printf("%p -> %p\n", base_addr, (void*)(base_addr + sizeof(node_t)));
+
     node->addr = (void*)(base_addr + sizeof(node_t));
     node->size = (uint64_t) (size - sizeof(node_t));
     node->prev = NULL;
@@ -99,9 +101,12 @@ int dfree(void* addr) {
 
     node_t* returned_node = (node_t*) (void*)(addr - sizeof(node_t));
 
-    returned_node->present = false;
+    printf("%p - %p\n", &returned_node, returned_node->addr);
+
+    returned_node->present = false; // Segfaults...
 
     node_t* prev_node = base_node;
+
 
     while (base_node->addr < returned_node->addr) {
         if (prev_node->next != NULL) {
@@ -145,11 +150,19 @@ void defragment() {
     return;
 }
 
-void print_heap() {
-    node_t* current_node = base_node;
-    do {
-        printf("Address: %x\n", current_node->addr);
-    } while (current_node->next != NULL);
+void print_heap(bool everything) {
+    if (!everything) {
+
+        node_t* current_node = base_node;
+
+        do {
+            printf("Address: %x; Size: %lu\n", current_node->addr, current_node->size);
+        } while (current_node->next != NULL);
+
+        return;
+    }
+
+    // TODO
 }
 
 // ------|
@@ -172,6 +185,8 @@ int main(int argc, char *argv[]) {
 
     base_node = allocate_node(mem_start, heap_size);
 
+    printf("%lu\n", base_node->size);
+
     // Testing
 
     char* test = (char*)dmalloc(sizeof(char) * 4);
@@ -185,9 +200,9 @@ int main(int argc, char *argv[]) {
     test2 = "EE!";
     printf("test2: %s\n", test2);
 
-    dfree(test);
+    //dfree(test);
 
-    //print_heap();
+    print_heap(false);
 
     // End testing
 
